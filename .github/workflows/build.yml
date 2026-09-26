@@ -1,0 +1,22 @@
+name: build
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Two JDKs: the legacy module needs 8, the modern module needs 21.
+      # Toolchains or a matrix would also work; here we build modern (which is what
+      # ships) on 21 and rely on the aggregator to compile legacy with its own release.
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build & test
+        run: mvn -B verify

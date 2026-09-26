@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  legacy-gestionale — "the code you inherited".
+
+  Deliberately old on purpose: Java 8, and the Jakarta EE 8 APIs that still used the
+  javax.* namespace. This is the starting point the OpenRewrite javax→jakarta recipe
+  will rewrite. Keep it compiling under Java 8 so the migration is real, not simulated.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>it.kristikomini</groupId>
+        <artifactId>gestionale-modernization</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>legacy-gestionale</artifactId>
+    <name>Legacy Gestionale (Java 8, javax.*)</name>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <!-- Jakarta EE 8 API — the LAST release under the javax.* package namespace. -->
+        <dependency>
+            <groupId>jakarta.platform</groupId>
+            <artifactId>jakarta.jakartaee-api</artifactId>
+            <version>8.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- JAX-WS reference implementation (javax era) — exposes the legacy SOAP service. -->
+        <dependency>
+            <groupId>com.sun.xml.ws</groupId>
+            <artifactId>jaxws-rt</artifactId>
+            <version>2.3.5</version>
+        </dependency>
+        <!-- Hibernate 5.x — the javax.persistence era; carries the intentional N+1 bug. -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>5.6.15.Final</version>
+        </dependency>
+        <!-- TODO(scaffold): JAX-RS impl if any REST is exposed by legacy. -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

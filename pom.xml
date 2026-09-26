@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Parent (aggregator) POM for the modernization project.
+
+  Two modules on purpose live under ONE build so the strangler migration is a single
+  repository: the legacy system you inherited and the modern system replacing it, route
+  by route. They do NOT share a parent's Java version — legacy is pinned to Java 8 to be
+  authentic, modern targets Java 21 — so each module declares its own compiler config.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>it.kristikomini</groupId>
+    <artifactId>gestionale-modernization</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Gestionale Modernization (strangler fig)</name>
+
+    <modules>
+        <module>legacy-gestionale</module>
+        <module>modern-gestionale</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+</project>

@@ -1,0 +1,19 @@
+# Brings the stack up with `docker compose up`. Infra is real now; the two app services are
+# added during the fill phase once each module has a Dockerfile.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: gestionale
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    ports: [ "5432:5432" ]
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U app -d gestionale" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # TODO(fill): legacy-gestionale (Java 8, SOAP) — build: ./legacy-gestionale
+  # TODO(fill): modern-gestionale (Spring Boot 3 gateway + ACL) — build: ./modern-gestionale
+  #   depends_on: [ postgres ]
