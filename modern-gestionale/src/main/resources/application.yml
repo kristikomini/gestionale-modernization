@@ -1,3 +1,10 @@
+# Strangler route table: per resource, is the route migrated to the modern DB yet?
+# true  -> served from the modern database (this app owns the data)
+# false -> served from the legacy system via the ACL (requires legacy.policy-service.enabled=true)
+strangler:
+  policies:
+    migrated: true
+
 spring:
   application:
     name: modern-gestionale

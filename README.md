@@ -34,15 +34,23 @@ Bologna, Verona): **you are hired to change code that already exists.**
 5. **Strangle route by route** — flip one gateway route to modern, keep the characterisation test
    green, soak, then delete the legacy handler. → [`docs/STRANGLER.md`](docs/STRANGLER.md)
 
-## What this demonstrates (CV bullets — fill numbers after building)
+## What this demonstrates (CV bullets)
 
+*Proven by tests in this repo today:*
 - Modernized a Java 8 / `javax` / SOAP gestionale to Spring Boot 3 / Java 21 via the strangler-fig
-  pattern with an Anti-Corruption Layer — `<N>` endpoints migrated incrementally, zero big-bang cutover.
-- Wrapped the legacy SOAP integration in Resilience4j (circuit breaker + retry + time limiter),
-  keeping the modern API up at `<N>`% availability while the legacy backend was failing `<N>`% of calls.
-- Fixed a Hibernate N+1 (`<N>` queries → 1 via `JOIN FETCH`) cutting the policy-list p95 from
-  `<N>` ms to `<N>` ms; parallelized `<N>` external lookups with virtual threads, `<N>`× faster.
-- Automated `javax→jakarta` with OpenRewrite and resolved the `<N>` string-literal references the tool missed.
+  pattern with an Anti-Corruption Layer — the migrate/not-migrated route decision is one config
+  flip, unit-tested both ways so a migrated route never touches the legacy system.
+- Wrapped the legacy SOAP integration in Resilience4j: retry-wraps-circuit-breaker; when the
+  backend fails the breaker opens and the API fails fast with a clean RFC 7807 503 instead of
+  hanging — proven by a circuit-breaker unit test.
+- Fixed a Hibernate **N+1 from `1+N` to `1` query** with `JOIN FETCH`, proven by query-count
+  characterisation tests on both sides against real Postgres (Testcontainers).
+- Migrated `java.util.Date` → `java.time` (killing a shared-`SimpleDateFormat` race) and ran
+  independent legacy lookups concurrently on Java 21 virtual threads.
+
+*To fill in once benchmarked (`docs/PERFORMANCE.md`):*
+- policy-list p95 `<N>` ms → `<N>` ms; virtual-thread fan-out `<N>`× faster; `javax→jakarta`
+  via OpenRewrite with `<N>` string-literal references fixed by hand.
 
 ## Run it
 

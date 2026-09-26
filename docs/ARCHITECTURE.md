@@ -42,10 +42,20 @@ modern.
 
 ## Routing model
 
-The gateway holds a route table (config, not code) mapping `METHOD + path` → `legacy` or
-`modern`. Migrating a route is a one-line config flip plus a redeploy of the gateway — no code
-change to either backend. This keeps the *decision* to cut over separate from the *work* of
-building the replacement.
+The strangler decision — for each resource, is it served from the modern DB or from the legacy
+system via the ACL — is a **config flip**, not a code change. Two equivalent ways to realise it:
+
+- **Application-level router (implemented here).** `PolicyQueryService` reads
+  `strangler.policies.migrated`; `true` serves from the modern repository, `false` serves through
+  the ACL (`LegacyPolicyClient`). Unit-tested both ways
+  (`PolicyQueryServiceTest`) — a migrated route never touches legacy, and vice versa. This is the
+  testable form when the modern app fronts both paths.
+- **Edge gateway (deployment alternative).** When legacy and modern are separate processes, an
+  edge gateway (Spring Cloud Gateway) holds the same `METHOD + path → legacy|modern` table and
+  routes at the network edge; migrating a route is a one-line gateway config flip. Same decision,
+  moved to the edge.
+
+Either way the *decision* to cut over stays separate from the *work* of building the replacement.
 
 ## Test strategy
 
