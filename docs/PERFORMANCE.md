@@ -7,10 +7,15 @@ before/after) is the interview story.
 The legacy policy-list loads each policy's coverages lazily → 1 query for the list + N for the
 coverages. **Fix:** `JOIN FETCH` / `@EntityGraph` in the modern repository.
 
-| | Queries | p95 |
+Measured by `PerformanceBenchmarkTest` against real PostgreSQL, 200 policies × 3 coverages:
+
+| | Queries | Wall-clock |
 |---|---|---|
-| Legacy (N+1) | `<1+N>` | `<N>` ms |
-| Modern (`JOIN FETCH`) | 1 | `<N>` ms |
+| Naive (lazy, N+1) | **201** (1 + 200) | 389 ms |
+| Modern (`JOIN FETCH`) | **1** | 57 ms |
+
+The query count is the durable number (it does not depend on the machine): 201 → 1. The wall-clock
+(~6.8× here) grows with round-trip latency — on a remote DB the N+1 penalty is far worse.
 
 ## 2. Missing index
 A frequent filter (`policy.holder_fiscal_code`) has no index → sequential scan. **Fix:** Flyway
@@ -21,9 +26,21 @@ Legacy shares a `SimpleDateFormat` across threads (not thread-safe) → corrupte
 **Fix:** migrate to `java.time` (`LocalDate`/`Instant`, immutable, thread-safe).
 
 ## 4. Synchronous blocking external lookups
-Legacy calls three external services sequentially. **Fix:** run them concurrently with **Java 21
-virtual threads** (`Executors.newVirtualThreadPerTaskExecutor()`) or a `CompletableFuture`
-pipeline. Measure wall-clock: `<sum>` ms → `~max` ms.
+Legacy calls independent external services sequentially, so latency is the **sum**. **Fix:** run
+them concurrently on **Java 21 virtual threads** (`Executors.newVirtualThreadPerTaskExecutor()`),
+so latency becomes roughly the **slowest** call.
 
-> Every number here must come from a JMH microbenchmark or a repeatable integration measurement,
-> not an estimate — see the shared [engineering standards](../../ENGINEERING-STANDARDS.md), rule 7.
+Measured by `PerformanceBenchmarkTest`, 100 independent tasks of 20 ms each:
+
+| | Wall-clock |
+|---|---|
+| Sequential (sum) | 2000 ms |
+| Virtual-thread fan-out | **44 ms** (≈ max + overhead) |
+
+About **45×** here; the point is that wall-clock stays flat as you add independent calls, instead of
+growing linearly.
+
+> Every number here comes from `PerformanceBenchmarkTest`, a repeatable integration measurement
+> against real PostgreSQL (not an estimate) — see the shared
+> [engineering standards](../../ENGINEERING-STANDARDS.md), rule 7. Re-run with
+> `mvn test -pl modern-gestionale -Dtest=PerformanceBenchmarkTest` (needs Docker).

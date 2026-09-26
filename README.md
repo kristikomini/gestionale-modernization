@@ -43,14 +43,15 @@ Bologna, Verona): **you are hired to change code that already exists.**
 - Wrapped the legacy SOAP integration in Resilience4j: retry-wraps-circuit-breaker; when the
   backend fails the breaker opens and the API fails fast with a clean RFC 7807 503 instead of
   hanging — proven by a circuit-breaker unit test.
-- Fixed a Hibernate **N+1 from `1+N` to `1` query** with `JOIN FETCH`, proven by query-count
-  characterisation tests on both sides against real Postgres (Testcontainers).
+- Fixed a Hibernate **N+1 from `201` to `1` query** (200 policies) with `JOIN FETCH`, measured by
+  `PerformanceBenchmarkTest` against real Postgres (Testcontainers) — ~6.8× faster wall-clock here,
+  and far more on a remote DB where each round-trip counts.
 - Migrated `java.util.Date` → `java.time` (killing a shared-`SimpleDateFormat` race) and ran
-  independent legacy lookups concurrently on Java 21 virtual threads.
+  independent legacy lookups concurrently on Java 21 virtual threads: **100 × 20 ms tasks went from
+  2000 ms sequential to 44 ms** (~45×), measured in the same benchmark.
 
-*To fill in once benchmarked (`docs/PERFORMANCE.md`):*
-- policy-list p95 `<N>` ms → `<N>` ms; virtual-thread fan-out `<N>`× faster; `javax→jakarta`
-  via OpenRewrite with `<N>` string-literal references fixed by hand.
+*Measured — see [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md):* N+1 201→1 query; virtual-thread
+fan-out ~45× on 100 independent calls.
 
 ## Run it
 
