@@ -17,22 +17,30 @@ spring:
     enabled: true
 
 # Anti-Corruption Layer target + resilience policy for the legacy SOAP backend.
+# Disabled by default: the modern app serves migrated routes from its own DB. Set enabled=true
+# (and a reachable endpoint-url) to activate the strangler path that proxies to legacy.
 legacy:
   policy-service:
-    wsdl-url: http://localhost:8088/ws/policy?wsdl
+    enabled: false
+    endpoint-url: http://localhost:8088/ws/policy
 
 resilience4j:
   circuitbreaker:
     instances:
       legacyPolicyClient:
+        sliding-window-type: COUNT_BASED
         sliding-window-size: 10
-        failure-rate-threshold: 50        # open after 50% of the last 10 calls fail
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50        # open after 50% of the last (>=5) calls fail
         wait-duration-in-open-state: 10s
   retry:
     instances:
       legacyPolicyClient:
         max-attempts: 3
         wait-duration: 200ms
+        # A tripped breaker means stop hammering — do not retry the fail-fast signal.
+        ignore-exceptions:
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
   timelimiter:
     instances:
       legacyPolicyClient:
