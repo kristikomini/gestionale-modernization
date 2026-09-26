@@ -66,4 +66,44 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <!--
+      The `modernize` profile wires OpenRewrite for the javax→jakarta migration. It is NOT active
+      by default — this module stays on javax on purpose (it is the "before"). Run the migration on
+      a branch with:
+
+        mvn -Pmodernize rewrite:dryRun   # preview the diff
+        mvn -Pmodernize rewrite:run      # apply it
+
+      Then hand-fix what the recipe cannot see — the string literals in META-INF/persistence.xml,
+      any Class.forName("javax…") and XML/log config (see docs/JAVAX-TO-JAKARTA.md), and bump the
+      dependencies to their Jakarta EE 9+ builds (Hibernate 6, JAX-WS 4). Versions below may need a
+      bump when the migration is actually run.
+    -->
+    <profiles>
+        <profile>
+            <id>modernize</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.openrewrite.maven</groupId>
+                        <artifactId>rewrite-maven-plugin</artifactId>
+                        <version>5.46.0</version>
+                        <configuration>
+                            <activeRecipes>
+                                <recipe>org.openrewrite.java.migrate.jakarta.JavaxMigrationToJakarta</recipe>
+                            </activeRecipes>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.openrewrite.recipe</groupId>
+                                <artifactId>rewrite-migrate-java</artifactId>
+                                <version>2.29.0</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
