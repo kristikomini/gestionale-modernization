@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Legacy JPA configuration, javax.persistence namespace (JPA 2.2 / Jakarta EE 8).
+
+  This file is exactly the kind of artefact the javax→jakarta migration trips over: the
+  namespace on the <persistence> element AND the provider class name are STRING references
+  that an import-rewriting tool does not touch. Migrating this module means:
+    - the schema namespace http://xmlns.jcp.org/xml/ns/persistence  →  https://jakarta.ee/xml/ns/persistence
+    - org.hibernate.jpa.HibernatePersistenceProvider stays, but the Hibernate 5 → 6 jump
+      changes behaviour (see docs/JAVAX-TO-JAKARTA.md).
+
+  hibernate.hbm2ddl.auto=update is itself a legacy anti-pattern (rule 1 of the shared
+  ENGINEERING-STANDARDS): the ORM authors the schema. It is kept here because it is what the
+  inherited system does — the modern module takes ownership of the schema via Flyway.
+-->
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+                                 http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
+             version="2.2">
+
+    <persistence-unit name="legacy-gestionale" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <class>it.kristikomini.legacy.policy.Policy</class>
+        <class>it.kristikomini.legacy.policy.Coverage</class>
+
+        <properties>
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="javax.persistence.jdbc.url"
+                      value="jdbc:postgresql://localhost:5432/gestionale"/>
+            <property name="javax.persistence.jdbc.user" value="app"/>
+            <property name="javax.persistence.jdbc.password" value="app"/>
+
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <!-- Surface the query count in logs — the N+1 is visible here. -->
+            <property name="hibernate.generate_statistics" value="true"/>
+        </properties>
+    </persistence-unit>
+</persistence>
